@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0b1220;
+  --foreground: #f8fafc;
+  --card: #111827;
+  --muted: #94a3b8;
+  --accent: #22c55e;
+  --accent-hover: #16a34a;
+  --border: #1f2937;
+}
+
+body {
+  background: radial-gradient(circle at top, #172554 0%, var(--background) 45%);
+  color: var(--foreground);
+  min-height: 100vh;
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-[var(--border)] bg-[var(--card)];
+  }
+
+  .input {
+    @apply w-full rounded-lg border border-[var(--border)] bg-[#0f172a] px-4 py-3 outline-none transition focus:border-[var(--accent)];
+  }
+
+  .btn-primary {
+    @apply rounded-lg bg-[var(--accent)] px-4 py-2.5 font-semibold text-black transition hover:bg-[var(--accent-hover)];
+  }
+
+  .btn-secondary {
+    @apply rounded-lg border border-[var(--border)] bg-[#0f172a] px-4 py-2.5 font-semibold transition hover:border-[var(--accent)]/50 hover:bg-white/5;
+  }
+}

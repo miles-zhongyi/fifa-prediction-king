@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: fifa-prediction-king
+    runtime: docker
+    plan: starter
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: file:/data/prod.db
+      - key: DATA_DIR
+        value: /data
+      - key: ADMIN_PASSWORD
+        sync: false
+    disk:
+      name: fifa-data
+      mountPath: /data
+      sizeGB: 1

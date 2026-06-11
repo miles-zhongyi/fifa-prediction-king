@@ -1,0 +1,15 @@
+services:
+  web:
+    build: .
+    ports:
+      - "${PORT:-3001}:3000"
+    environment:
+      DATABASE_URL: file:/data/prod.db
+      DATA_DIR: /data
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme}
+    volumes:
+      - fifa-data:/data
+    restart: unless-stopped
+
+volumes:
+  fifa-data:
