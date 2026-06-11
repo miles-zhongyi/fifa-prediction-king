@@ -183,7 +183,8 @@ describe("submitPrediction", () => {
         },
       ),
     ).rejects.toMatchObject({
-      message: "Predictions are closed because the match has already started",
+      message:
+        "Predictions are closed because the match has already started (Toronto time)",
       statusCode: 400,
     });
   });

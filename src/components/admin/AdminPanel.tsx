@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { Match } from "@/types";
 import { adminFetch, clearStoredAdminPassword } from "@/lib/admin/client";
 import { AdminGroupResults } from "./AdminGroupResults";
+import { AdminKnockoutRoundResults } from "./AdminKnockoutRoundResults";
 import { AdminMatchCard } from "./AdminMatchCard";
 import { CreateMatchForm } from "./CreateMatchForm";
 
@@ -112,6 +113,7 @@ export function AdminPanel() {
         </section>
 
         <AdminGroupResults />
+        <AdminKnockoutRoundResults />
       </div>
     </div>
   );

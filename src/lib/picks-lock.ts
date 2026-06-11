@@ -1,6 +1,6 @@
 /**
- * Group advancer and third-place picks stay open through June 19, 2026
- * (Toronto time) and lock at the start of June 20.
+ * Group advancer and third-place picks use a fixed deadline (not per-match):
+ * open through June 19, 2026 Toronto time, then lock at midnight June 20.
  */
 const GROUP_PICKS_LOCK_AT = new Date("2026-06-20T04:00:00.000Z");
 

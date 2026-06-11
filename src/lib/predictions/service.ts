@@ -1,5 +1,6 @@
 import { ZodError } from "zod";
 import { isGroupStageMatch } from "@/lib/match-utils";
+import { hasTorontoMatchKickoffStarted } from "@/lib/timezone";
 import { getOrCreateUser } from "@/lib/users";
 import type { PredictionWithRelations } from "@/types";
 import { PredictionServiceError } from "./errors";
@@ -20,9 +21,9 @@ export function assertMatchNotStarted(
   startTime: Date,
   now: Date,
 ): void {
-  if (now.getTime() >= startTime.getTime()) {
+  if (hasTorontoMatchKickoffStarted(startTime, now)) {
     throw new PredictionServiceError(
-      "Predictions are closed because the match has already started",
+      "Predictions are closed because the match has already started (Toronto time)",
       400,
     );
   }

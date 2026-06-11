@@ -172,6 +172,7 @@ export function useGroupPicks(
 
   return {
     boards,
+    userPicks,
     loading,
     error,
     reload: load,

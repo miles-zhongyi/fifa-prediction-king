@@ -7,4 +7,5 @@ function run(command) {
 run("npx prisma migrate deploy");
 run("npx tsx scripts/repair-db-schema.ts");
 run("npx tsx scripts/ensure-group-results.ts");
+run("npx tsx scripts/ensure-knockout-round-results.ts");
 run("npx tsx prisma/seed-if-empty.ts");

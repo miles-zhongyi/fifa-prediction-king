@@ -38,6 +38,7 @@ describe("group and third-place scoring", () => {
         { groupKey: "A", team: "South Africa" },
       ],
       thirdPlacePicks: [],
+      knockoutRoundPicks: [],
       matchPredictions: [],
       groupResults: [
         {
@@ -51,6 +52,7 @@ describe("group and third-place scoring", () => {
           updatedAt: new Date(),
         },
       ],
+      knockoutRoundResults: [],
     });
 
     expect(stats).toEqual({
@@ -77,12 +79,42 @@ describe("group and third-place scoring", () => {
     ).toBe(true);
   });
 
+  it("scores correct knockout round picks at 0.5 points", () => {
+    const stats = calculateUserStats({
+      groupPicks: [],
+      thirdPlacePicks: [],
+      knockoutRoundPicks: [
+        { round: "TOP16", team: "Brazil" },
+        { round: "WINNER", team: "France" },
+      ],
+      matchPredictions: [],
+      groupResults: [],
+      knockoutRoundResults: [
+        {
+          round: "TOP16",
+          teams: ["Brazil", "France"],
+          finalized: true,
+        },
+        {
+          round: "WINNER",
+          teams: ["France"],
+          finalized: true,
+        },
+      ],
+    });
+
+    expect(stats.points).toBe(1);
+    expect(stats.correctPredictions).toBe(2);
+  });
+
   it("scores knockout winners at 0.5 points", () => {
     const stats = calculateUserStats({
       groupPicks: [],
       thirdPlacePicks: [],
+      knockoutRoundPicks: [],
       matchPredictions: [knockoutPrediction()],
       groupResults: [],
+      knockoutRoundResults: [],
     });
 
     expect(stats.points).toBe(STAGE_POINTS.KNOCKOUT);

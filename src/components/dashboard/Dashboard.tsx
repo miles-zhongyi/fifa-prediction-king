@@ -5,11 +5,13 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { ErrorAlert } from "@/components/ui/ErrorAlert";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { useGroupPicksContext } from "@/contexts/GroupPicksContext";
+import { useThirdPlacePicksContext } from "@/contexts/ThirdPlacePicksContext";
 import { MAX_GROUP_ADVANCERS } from "@/lib/groups";
 
 export function Dashboard() {
   const { boards, loading, error, reload, togglePick, getUserPicksForGroup } =
     useGroupPicksContext();
+  const { userPicks: thirdPlacePicks } = useThirdPlacePicksContext();
 
   if (loading && boards.length === 0) {
     return <LoadingState message="Loading group picks..." />;
@@ -32,6 +34,7 @@ export function Dashboard() {
             key={board.groupKey}
             board={board}
             userPicks={getUserPicksForGroup(board.groupKey)}
+            blockedTeams={thirdPlacePicks}
             onToggle={(team) => togglePick(board.groupKey, team)}
           />
         ))}

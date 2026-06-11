@@ -14,6 +14,7 @@ function createUser(
       winner: string | null;
       status?: MatchStatus;
     }>;
+    knockoutRound?: Array<{ round: string; team: string }>;
   },
 ): UserWithAllPicks {
   return {
@@ -33,6 +34,13 @@ function createUser(
       id: `tpp-${username}-${index}`,
       userId: `user-${username}`,
       team,
+      createdAt: new Date("2026-01-01T00:00:00.000Z"),
+    })),
+    knockoutRoundPicks: (input.knockoutRound ?? []).map((pick, index) => ({
+      id: `krp-${username}-${index}`,
+      userId: `user-${username}`,
+      round: pick.round,
+      team: pick.team,
       createdAt: new Date("2026-01-01T00:00:00.000Z"),
     })),
     predictions: (input.knockout ?? []).map((prediction, index) => {
@@ -101,6 +109,7 @@ describe("getLeaderboard", () => {
           updatedAt: new Date(),
         },
       ]),
+      findKnockoutRoundResults: vi.fn().mockResolvedValue([]),
     };
 
     const leaderboard = await getLeaderboard({ repository });

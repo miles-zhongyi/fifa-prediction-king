@@ -1,5 +1,5 @@
-import { KnockoutBoard } from "@/components/knockout/KnockoutBoard";
+import { KnockoutRoundPicksBoard } from "@/components/knockout/KnockoutRoundPicksBoard";
 
 export default function KnockoutPage() {
-  return <KnockoutBoard />;
+  return <KnockoutRoundPicksBoard />;
 }

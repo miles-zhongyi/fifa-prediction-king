@@ -25,15 +25,21 @@ export type GroupBoard = {
 type GroupPickCardProps = {
   board: GroupBoard;
   userPicks: string[];
+  blockedTeams?: string[];
   onToggle: (team: string) => Promise<void>;
 };
 
-export function GroupPickCard({ board, userPicks, onToggle }: GroupPickCardProps) {
+export function GroupPickCard({
+  board,
+  userPicks,
+  blockedTeams = [],
+  onToggle,
+}: GroupPickCardProps) {
   const [submitting, setSubmitting] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function handleToggle(team: string) {
-    if (board.locked) {
+    if (board.locked || blockedTeams.includes(team)) {
       return;
     }
 
@@ -73,6 +79,7 @@ export function GroupPickCard({ board, userPicks, onToggle }: GroupPickCardProps
       <div className="divide-y divide-[var(--border)]">
         {board.teams.map((team) => {
           const isSelected = userPicks.includes(team);
+          const isBlocked = blockedTeams.includes(team);
           const isAdvancer = advancers.includes(team);
           const voters = board.picksByTeam[team] ?? [];
 
@@ -84,10 +91,10 @@ export function GroupPickCard({ board, userPicks, onToggle }: GroupPickCardProps
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <button
                   type="button"
-                  disabled={board.locked || submitting !== null}
+                  disabled={board.locked || isBlocked || submitting !== null}
                   onClick={() => void handleToggle(team)}
-                  className={`flex items-center gap-2 text-left transition disabled:opacity-60 ${
-                    board.locked
+                  className={`flex flex-wrap items-center gap-2 text-left transition disabled:opacity-60 ${
+                    board.locked || isBlocked
                       ? "cursor-default"
                       : "rounded-lg px-1 py-1 hover:bg-white/5"
                   }`}
@@ -96,6 +103,11 @@ export function GroupPickCard({ board, userPicks, onToggle }: GroupPickCardProps
                   {isSelected && (
                     <span className="text-xs font-medium text-emerald-400">
                       Your pick
+                    </span>
+                  )}
+                  {isBlocked && (
+                    <span className="text-xs text-amber-400">
+                      Picked in 3rd place
                     </span>
                   )}
                   {isAdvancer && (

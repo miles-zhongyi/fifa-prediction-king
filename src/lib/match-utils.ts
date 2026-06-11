@@ -4,7 +4,11 @@ import {
   formatTorontoDateTime,
   formatTorontoKickoffTime,
   getTorontoDateKey,
+  hasTorontoMatchKickoffStarted,
+  isBeforeTorontoMatchKickoff,
 } from "@/lib/timezone";
+
+export { isBeforeTorontoMatchKickoff, hasTorontoMatchKickoffStarted };
 
 export type MatchLockStatus = "open" | "locked" | "live" | "finished";
 
@@ -20,8 +24,7 @@ export function getMatchLockStatus(
     return "live";
   }
 
-  const startTime = new Date(match.startTime);
-  if (now.getTime() >= startTime.getTime()) {
+  if (hasTorontoMatchKickoffStarted(match.startTime, now)) {
     return "locked";
   }
 

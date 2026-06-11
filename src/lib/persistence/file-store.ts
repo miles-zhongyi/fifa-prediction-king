@@ -55,6 +55,19 @@ export type PersistedGameData = {
     finalized: boolean;
     updatedAt: string;
   }>;
+  knockoutRoundPicks: Array<{
+    id: string;
+    userId: string;
+    round: string;
+    team: string;
+    createdAt: string;
+  }>;
+  knockoutRoundResults: Array<{
+    round: string;
+    teams: string;
+    finalized: boolean;
+    updatedAt: string;
+  }>;
 };
 
 export function getGameDataFilePath(): string {
@@ -62,15 +75,25 @@ export function getGameDataFilePath(): string {
 }
 
 export async function exportGameDataToFile(): Promise<void> {
-  const [users, matches, predictions, groupAdvancePicks, thirdPlacePicks, groupResults] =
-    await Promise.all([
-      prisma.user.findMany({ orderBy: { createdAt: "asc" } }),
-      prisma.match.findMany({ orderBy: { startTime: "asc" } }),
-      prisma.prediction.findMany({ orderBy: { createdAt: "asc" } }),
-      prisma.groupAdvancePick.findMany({ orderBy: { createdAt: "asc" } }),
-      prisma.thirdPlacePick.findMany({ orderBy: { createdAt: "asc" } }),
-      prisma.groupResult.findMany({ orderBy: { groupKey: "asc" } }),
-    ]);
+  const [
+    users,
+    matches,
+    predictions,
+    groupAdvancePicks,
+    thirdPlacePicks,
+    groupResults,
+    knockoutRoundPicks,
+    knockoutRoundResults,
+  ] = await Promise.all([
+    prisma.user.findMany({ orderBy: { createdAt: "asc" } }),
+    prisma.match.findMany({ orderBy: { startTime: "asc" } }),
+    prisma.prediction.findMany({ orderBy: { createdAt: "asc" } }),
+    prisma.groupAdvancePick.findMany({ orderBy: { createdAt: "asc" } }),
+    prisma.thirdPlacePick.findMany({ orderBy: { createdAt: "asc" } }),
+    prisma.groupResult.findMany({ orderBy: { groupKey: "asc" } }),
+    prisma.knockoutRoundPick.findMany({ orderBy: { createdAt: "asc" } }),
+    prisma.knockoutRoundResult.findMany({ orderBy: { round: "asc" } }),
+  ]);
 
   const payload: PersistedGameData = {
     exportedAt: new Date().toISOString(),
@@ -119,6 +142,19 @@ export async function exportGameDataToFile(): Promise<void> {
       advancer2: result.advancer2,
       thirdPlaceTeam: result.thirdPlaceTeam,
       thirdAdvances: result.thirdAdvances,
+      finalized: result.finalized,
+      updatedAt: result.updatedAt.toISOString(),
+    })),
+    knockoutRoundPicks: knockoutRoundPicks.map((pick) => ({
+      id: pick.id,
+      userId: pick.userId,
+      round: pick.round,
+      team: pick.team,
+      createdAt: pick.createdAt.toISOString(),
+    })),
+    knockoutRoundResults: knockoutRoundResults.map((result) => ({
+      round: result.round,
+      teams: result.teams,
       finalized: result.finalized,
       updatedAt: result.updatedAt.toISOString(),
     })),
@@ -214,6 +250,29 @@ export async function restoreGameDataFromFile(): Promise<boolean> {
           advancer2: result.advancer2,
           thirdPlaceTeam: result.thirdPlaceTeam,
           thirdAdvances: result.thirdAdvances,
+          finalized: result.finalized,
+          updatedAt: new Date(result.updatedAt),
+        },
+      });
+    }
+
+    for (const pick of data.knockoutRoundPicks ?? []) {
+      await prisma.knockoutRoundPick.create({
+        data: {
+          id: pick.id,
+          userId: pick.userId,
+          round: pick.round,
+          team: pick.team,
+          createdAt: new Date(pick.createdAt),
+        },
+      });
+    }
+
+    for (const result of data.knockoutRoundResults ?? []) {
+      await prisma.knockoutRoundResult.create({
+        data: {
+          round: result.round,
+          teams: result.teams,
           finalized: result.finalized,
           updatedAt: new Date(result.updatedAt),
         },

@@ -1,10 +1,12 @@
 import { MatchStatus, type GroupResult } from "@prisma/client";
 import { isKnockoutStage } from "@/lib/match-utils";
+import type { KnockoutRoundKey } from "@/lib/knockout-rounds";
 
 export const STAGE_POINTS = {
   GROUP_ADVANCE: 1,
   THIRD_PLACE: 1,
   KNOCKOUT: 0.5,
+  KNOCKOUT_ROUND: 0.5,
 } as const;
 
 export type ScoredPrediction = {
@@ -23,6 +25,17 @@ export type ScoredGroupPick = {
 
 export type ScoredThirdPlacePick = {
   team: string;
+};
+
+export type ScoredKnockoutRoundPick = {
+  round: KnockoutRoundKey;
+  team: string;
+};
+
+export type KnockoutRoundResultEntry = {
+  round: string;
+  teams: string[];
+  finalized: boolean;
 };
 
 export function isCorrectKnockoutPrediction(
@@ -67,11 +80,28 @@ export function isCorrectThirdPlacePick(
   );
 }
 
+export function isCorrectKnockoutRoundPick(
+  pick: ScoredKnockoutRoundPick,
+  results: KnockoutRoundResultEntry[],
+): boolean {
+  const result = results.find(
+    (entry) => entry.round === pick.round && entry.finalized,
+  );
+
+  if (!result) {
+    return false;
+  }
+
+  return result.teams.includes(pick.team);
+}
+
 export function calculateUserStats(input: {
   groupPicks: ScoredGroupPick[];
   thirdPlacePicks: ScoredThirdPlacePick[];
+  knockoutRoundPicks: ScoredKnockoutRoundPick[];
   matchPredictions: ScoredPrediction[];
   groupResults: GroupResult[];
+  knockoutRoundResults: KnockoutRoundResultEntry[];
 }) {
   let correctPredictions = 0;
   let points = 0;
@@ -90,6 +120,13 @@ export function calculateUserStats(input: {
     }
   }
 
+  for (const pick of input.knockoutRoundPicks) {
+    if (isCorrectKnockoutRoundPick(pick, input.knockoutRoundResults)) {
+      correctPredictions += 1;
+      points += STAGE_POINTS.KNOCKOUT_ROUND;
+    }
+  }
+
   for (const prediction of input.matchPredictions) {
     if (isCorrectKnockoutPrediction(prediction)) {
       correctPredictions += 1;
@@ -101,6 +138,7 @@ export function calculateUserStats(input: {
     totalPredictions:
       input.groupPicks.length +
       input.thirdPlacePicks.length +
+      input.knockoutRoundPicks.length +
       input.matchPredictions.length,
     correctPredictions,
     points,

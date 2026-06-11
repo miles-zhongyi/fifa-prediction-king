@@ -25,7 +25,7 @@ export function LeaderboardTable() {
     <>
       <PageHeader
         title="Leaderboard"
-        description="Group advancers & 3rd place: 1 pt each · Knockout winners: 0.5 pt each"
+        description="Group advancers & 3rd place: 1 pt each · Knockout round picks: 0.5 pt each"
       />
 
       {entries.length === 0 ? (

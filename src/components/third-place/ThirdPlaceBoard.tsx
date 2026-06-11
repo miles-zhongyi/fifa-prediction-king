@@ -6,10 +6,14 @@ import { TeamVoters } from "@/components/picks/TeamVoters";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ErrorAlert } from "@/components/ui/ErrorAlert";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { useGroupPicksContext } from "@/contexts/GroupPicksContext";
 import { useThirdPlacePicksContext } from "@/contexts/ThirdPlacePicksContext";
+
 export function ThirdPlaceBoard() {
   const { board, userPicks, loading, error, reload, togglePick } =
     useThirdPlacePicksContext();
+  const { userPicks: groupAdvancePicks } = useGroupPicksContext();
+  const blockedTeams = new Set(groupAdvancePicks.map((pick) => pick.team));
   const [submitting, setSubmitting] = useState<string | null>(null);
   const [pickError, setPickError] = useState<string | null>(null);
 
@@ -27,7 +31,7 @@ export function ThirdPlaceBoard() {
   }
 
   async function handleToggle(team: string) {
-    if (!board || board.locked) {
+    if (!board || board.locked || blockedTeams.has(team)) {
       return;
     }
 
@@ -51,7 +55,7 @@ export function ThirdPlaceBoard() {
     <>
       <PageHeader
         title="Third-Place Advancers"
-        description={`Pick ${board.maxPicks} teams you think will advance as the best third-place finishers.`}
+        description={`Pick ${board.maxPicks} teams you think will advance as the best third-place finishers. Teams you already picked to advance from a group cannot be selected here.`}
       />
 
       <p className="mb-4 text-sm text-[var(--muted)]">
@@ -74,6 +78,7 @@ export function ThirdPlaceBoard() {
             <div className="divide-y divide-[var(--border)]">
               {teams.map((team) => {
                 const isSelected = userPicks.includes(team);
+                const isBlocked = blockedTeams.has(team);
                 const voters = board.picksByTeam[team] ?? [];
 
                 return (
@@ -85,13 +90,18 @@ export function ThirdPlaceBoard() {
                   >
                     <button
                       type="button"
-                      disabled={board.locked || submitting !== null}
+                      disabled={board.locked || isBlocked || submitting !== null}
                       onClick={() => void handleToggle(team)}
-                      className="flex items-center gap-2 text-left disabled:opacity-60"
+                      className="flex flex-wrap items-center gap-2 text-left disabled:opacity-60"
                     >
                       <TeamName team={team} flagSize={18} className="font-medium" />
                       {isSelected && (
                         <span className="text-xs text-emerald-400">Your pick</span>
+                      )}
+                      {isBlocked && (
+                        <span className="text-xs text-amber-400">
+                          Group advancer pick
+                        </span>
                       )}
                     </button>
                     <div className="sm:max-w-[45%]">

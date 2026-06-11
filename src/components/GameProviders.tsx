@@ -1,6 +1,7 @@
 "use client";
 
 import { GroupPicksProvider } from "@/contexts/GroupPicksContext";
+import { KnockoutRoundPicksProvider } from "@/contexts/KnockoutRoundPicksContext";
 import { MatchesProvider, useMatchesContext } from "@/contexts/MatchesContext";
 import { PredictionsProvider } from "@/contexts/PredictionsContext";
 import { ThirdPlacePicksProvider } from "@/contexts/ThirdPlacePicksContext";
@@ -29,9 +30,11 @@ export function GameProviders({ children }: { children: React.ReactNode }) {
     <MatchesProvider>
       <GroupPicksProvider username={username} avatarUrl={avatarUrl}>
         <ThirdPlacePicksProvider username={username} avatarUrl={avatarUrl}>
-          <PredictionsWithMatchSync username={username}>
-            {children}
-          </PredictionsWithMatchSync>
+          <KnockoutRoundPicksProvider username={username} avatarUrl={avatarUrl}>
+            <PredictionsWithMatchSync username={username}>
+              {children}
+            </PredictionsWithMatchSync>
+          </KnockoutRoundPicksProvider>
         </ThirdPlacePicksProvider>
       </GroupPicksProvider>
     </MatchesProvider>

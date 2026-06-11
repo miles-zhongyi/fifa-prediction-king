@@ -7,6 +7,8 @@ import {
   type GroupKey,
 } from "@/lib/groups";
 import { prisma } from "@/lib/prisma";
+import { removeKnockoutPicksForTeams } from "@/lib/knockout-pool";
+import { getUserThirdPlaceTeams } from "@/lib/pick-conflicts";
 import { getOrCreateUser } from "@/lib/users";
 import { PredictionServiceError } from "@/lib/predictions/errors";
 import { isGroupLocked } from "@/lib/group-picks/locking";
@@ -55,6 +57,7 @@ export async function toggleGroupAdvancePick(rawInput: unknown) {
 
   if (existing) {
     await prisma.groupAdvancePick.delete({ where: { id: existing.id } });
+    await removeKnockoutPicksForTeams(user.id, [input.team]);
     return { groupKey, team: input.team, selected: false };
   }
 
@@ -65,6 +68,14 @@ export async function toggleGroupAdvancePick(rawInput: unknown) {
   if (currentCount >= MAX_GROUP_ADVANCERS) {
     throw new PredictionServiceError(
       `You can only pick ${MAX_GROUP_ADVANCERS} teams per group`,
+      400,
+    );
+  }
+
+  const thirdPlaceTeams = await getUserThirdPlaceTeams(user.id);
+  if (thirdPlaceTeams.has(input.team)) {
+    throw new PredictionServiceError(
+      "You already picked this team as a third-place advancer",
       400,
     );
   }

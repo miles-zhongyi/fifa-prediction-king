@@ -59,3 +59,22 @@ export function formatTorontoDateHeading(date: string | Date): string {
     typeof date === "string" ? new Date(date) : date,
   );
 }
+
+function toDate(value: string | Date): Date {
+  return typeof value === "string" ? new Date(value) : value;
+}
+
+/** True once the match kickoff instant (Toronto local time) has been reached. */
+export function hasTorontoMatchKickoffStarted(
+  startTime: string | Date,
+  now: Date = new Date(),
+): boolean {
+  return now.getTime() >= toDate(startTime).getTime();
+}
+
+export function isBeforeTorontoMatchKickoff(
+  startTime: string | Date,
+  now: Date = new Date(),
+): boolean {
+  return !hasTorontoMatchKickoffStarted(startTime, now);
+}
