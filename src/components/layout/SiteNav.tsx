@@ -8,7 +8,9 @@ import { UserAvatar } from "@/components/users/UserAvatar";
 import { useUser } from "@/contexts/UserContext";
 
 const links = [
-  { href: "/", label: "Group Stage" },
+  { href: "/", label: "Groups" },
+  { href: "/third-place", label: "3rd Place" },
+  { href: "/knockout", label: "Knockout" },
   { href: "/leaderboard", label: "Leaderboard" },
 ];
 

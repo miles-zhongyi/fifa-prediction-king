@@ -95,6 +95,32 @@ export function isGroupStageMatch(stage: string): boolean {
   return /^group\s+[a-l]$/i.test(stage.trim());
 }
 
+function normalizeStageKey(stage: string): string {
+  return stage.trim().toLowerCase().replace(/[\s_-]+/g, "");
+}
+
+export function isKnockoutStage(stage: string): boolean {
+  const key = normalizeStageKey(stage);
+
+  return (
+    key === "roundof16" ||
+    key === "r16" ||
+    key === "roundof32" ||
+    key === "r32" ||
+    key === "quarterfinal" ||
+    key === "semifinal" ||
+    key === "final" ||
+    key.includes("knockout") ||
+    key.includes("roundof")
+  );
+}
+
+export function filterKnockoutMatches<T extends Pick<Match, "stage">>(
+  matches: T[],
+): T[] {
+  return matches.filter((match) => isKnockoutStage(match.stage));
+}
+
 export function getGroupSortKey(stage: string): string {
   const match = stage.trim().match(/^group\s+([a-l])$/i);
   return match ? match[1].toUpperCase() : stage;

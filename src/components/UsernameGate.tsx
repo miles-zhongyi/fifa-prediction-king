@@ -202,7 +202,7 @@ export function UsernameGate({ children }: UsernameGateProps) {
       onSignOut={handleSignOut}
       updateAvatarUrl={updateAvatarUrl}
     >
-      <GameProviders username={session.username}>
+      <GameProviders>
         <GameLayout>{children}</GameLayout>
       </GameProviders>
     </UserProvider>

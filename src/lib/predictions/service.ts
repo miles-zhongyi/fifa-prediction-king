@@ -1,4 +1,5 @@
 import { ZodError } from "zod";
+import { isGroupStageMatch } from "@/lib/match-utils";
 import { getOrCreateUser } from "@/lib/users";
 import type { PredictionWithRelations } from "@/types";
 import { PredictionServiceError } from "./errors";
@@ -49,6 +50,13 @@ export async function submitPrediction(
   const match = await repository.findMatchById(input.matchId);
   if (!match) {
     throw new PredictionServiceError("Match not found", 404);
+  }
+
+  if (isGroupStageMatch(match.stage)) {
+    throw new PredictionServiceError(
+      "Group stage uses group advance picks, not per-match winners",
+      400,
+    );
   }
 
   assertMatchNotStarted(match.startTime, now);

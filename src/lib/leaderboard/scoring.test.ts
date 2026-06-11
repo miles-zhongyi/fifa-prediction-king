@@ -5,12 +5,14 @@ import {
   calculateUserStats,
   formatPoints,
   getPointsForPrediction,
-  getStagePoints,
+  isCorrectGroupAdvancePick,
+  isCorrectKnockoutPrediction,
   isCorrectPrediction,
+  isCorrectThirdPlacePick,
   type ScoredPrediction,
 } from "./scoring";
 
-function prediction(
+function knockoutPrediction(
   overrides: Partial<ScoredPrediction> & {
     stage?: string;
     winner?: string | null;
@@ -18,142 +20,105 @@ function prediction(
     predictedWinner?: string;
   } = {},
 ): ScoredPrediction {
-  const winner =
-    overrides.winner !== undefined ? overrides.winner : "Brazil";
-
   return {
     predictedWinner: overrides.predictedWinner ?? "Brazil",
     match: {
       status: overrides.status ?? MatchStatus.FINISHED,
-      winner,
-      stage: overrides.stage ?? "Group A",
+      winner: overrides.winner ?? "Brazil",
+      stage: overrides.stage ?? "Quarter Final",
     },
   };
 }
 
-describe("getStagePoints", () => {
-  it.each([
-    ["Group A", STAGE_POINTS.GROUP],
-    ["Group B", STAGE_POINTS.GROUP],
-    ["Round of 16", STAGE_POINTS.KNOCKOUT],
-    ["R16", STAGE_POINTS.KNOCKOUT],
-    ["Quarter Final", STAGE_POINTS.KNOCKOUT],
-    ["Quarterfinal", STAGE_POINTS.KNOCKOUT],
-    ["Semi Final", STAGE_POINTS.KNOCKOUT],
-    ["Semifinal", STAGE_POINTS.KNOCKOUT],
-    ["Final", STAGE_POINTS.KNOCKOUT],
-  ])("maps %s to %s points", (stage, expectedPoints) => {
-    expect(getStagePoints(stage)).toBe(expectedPoints);
+describe("group and third-place scoring", () => {
+  it("scores correct group advancers at 1 point each", () => {
+    const stats = calculateUserStats({
+      groupPicks: [
+        { groupKey: "A", team: "Mexico" },
+        { groupKey: "A", team: "South Africa" },
+      ],
+      thirdPlacePicks: [],
+      matchPredictions: [],
+      groupResults: [
+        {
+          id: "1",
+          groupKey: "A",
+          advancer1: "Mexico",
+          advancer2: "South Africa",
+          thirdPlaceTeam: "South Korea",
+          thirdAdvances: false,
+          finalized: true,
+          updatedAt: new Date(),
+        },
+      ],
+    });
+
+    expect(stats).toEqual({
+      totalPredictions: 2,
+      correctPredictions: 2,
+      points: 2,
+    });
   });
 
-  it("returns 0 for unknown stages", () => {
-    expect(getStagePoints("Friendly")).toBe(0);
-  });
-});
-
-describe("isCorrectPrediction", () => {
-  it("is correct when the finished match winner matches", () => {
+  it("scores correct third-place picks at 1 point each", () => {
     expect(
-      isCorrectPrediction(
-        prediction({
-          predictedWinner: "Argentina",
-          winner: "Argentina",
-          status: MatchStatus.FINISHED,
-        }),
-      ),
+      isCorrectThirdPlacePick({ team: "South Korea" }, [
+        {
+          id: "1",
+          groupKey: "A",
+          advancer1: "Mexico",
+          advancer2: "South Africa",
+          thirdPlaceTeam: "South Korea",
+          thirdAdvances: true,
+          finalized: true,
+          updatedAt: new Date(),
+        },
+      ]),
     ).toBe(true);
   });
 
-  it("is incorrect for unfinished matches", () => {
-    expect(
-      isCorrectPrediction(
-        prediction({
-          status: MatchStatus.SCHEDULED,
-        }),
-      ),
-    ).toBe(false);
-  });
-
-  it("is incorrect when the winner is missing", () => {
-    expect(
-      isCorrectPrediction(
-        prediction({
-          winner: null,
-          status: MatchStatus.FINISHED,
-        }),
-      ),
-    ).toBe(false);
-  });
-
-  it("is incorrect when the pick does not match", () => {
-    expect(
-      isCorrectPrediction(
-        prediction({
-          predictedWinner: "Brazil",
-          winner: "Argentina",
-        }),
-      ),
-    ).toBe(false);
-  });
-});
-
-describe("getPointsForPrediction", () => {
-  it("awards stage points only for correct finished predictions", () => {
-    expect(
-      getPointsForPrediction(
-        prediction({
-          stage: "Quarter Final",
-          predictedWinner: "Spain",
-          winner: "Spain",
-        }),
-      ),
-    ).toBe(0.5);
-  });
-
-  it("awards no points for incorrect predictions", () => {
-    expect(
-      getPointsForPrediction(
-        prediction({
-          stage: "Final",
-          predictedWinner: "Brazil",
-          winner: "Argentina",
-        }),
-      ),
-    ).toBe(0);
-  });
-});
-
-describe("calculateUserStats", () => {
-  it("sums weighted points across correct predictions only", () => {
-    const stats = calculateUserStats([
-      prediction({
-        stage: "Group A",
-        predictedWinner: "Brazil",
-        winner: "Brazil",
-      }),
-      prediction({
-        stage: "Round of 16",
-        predictedWinner: "France",
-        winner: "France",
-      }),
-      prediction({
-        stage: "Final",
-        predictedWinner: "Spain",
-        winner: "England",
-      }),
-      prediction({
-        stage: "Semi Final",
-        predictedWinner: "Portugal",
-        winner: "Portugal",
-        status: MatchStatus.SCHEDULED,
-      }),
-    ]);
-
-    expect(stats).toEqual({
-      totalPredictions: 4,
-      correctPredictions: 2,
-      points: 1.5,
+  it("scores knockout winners at 0.5 points", () => {
+    const stats = calculateUserStats({
+      groupPicks: [],
+      thirdPlacePicks: [],
+      matchPredictions: [knockoutPrediction()],
+      groupResults: [],
     });
+
+    expect(stats.points).toBe(STAGE_POINTS.KNOCKOUT);
+  });
+});
+
+describe("isCorrectGroupAdvancePick", () => {
+  it("is false when the group is not finalized", () => {
+    expect(
+      isCorrectGroupAdvancePick(
+        { groupKey: "A", team: "Mexico" },
+        [
+          {
+            id: "1",
+            groupKey: "A",
+            advancer1: "Mexico",
+            advancer2: "South Africa",
+            thirdPlaceTeam: null,
+            thirdAdvances: false,
+            finalized: false,
+            updatedAt: new Date(),
+          },
+        ],
+      ),
+    ).toBe(false);
+  });
+});
+
+describe("knockout helpers", () => {
+  it("detects correct knockout predictions", () => {
+    expect(isCorrectKnockoutPrediction(knockoutPrediction())).toBe(true);
+    expect(isCorrectPrediction(knockoutPrediction())).toBe(true);
+  });
+
+  it("awards knockout points through legacy helper", () => {
+    expect(getPointsForPrediction(knockoutPrediction())).toBe(0.5);
   });
 });
 

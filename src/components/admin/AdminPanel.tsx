@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import type { Match } from "@/types";
 import { adminFetch, clearStoredAdminPassword } from "@/lib/admin/client";
+import { AdminGroupResults } from "./AdminGroupResults";
 import { AdminMatchCard } from "./AdminMatchCard";
 import { CreateMatchForm } from "./CreateMatchForm";
 
@@ -109,6 +110,8 @@ export function AdminPanel() {
             </div>
           )}
         </section>
+
+        <AdminGroupResults />
       </div>
     </div>
   );

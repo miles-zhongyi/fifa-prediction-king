@@ -1,18 +1,30 @@
-import type { Match, Prediction, User } from "@prisma/client";
+import type {
+  GroupAdvancePick,
+  GroupResult,
+  Match,
+  Prediction,
+  ThirdPlacePick,
+  User,
+} from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
-export type UserWithPredictions = User & {
+export type UserWithAllPicks = User & {
+  groupAdvancePicks: GroupAdvancePick[];
+  thirdPlacePicks: ThirdPlacePick[];
   predictions: (Prediction & { match: Match })[];
 };
 
 export interface LeaderboardRepository {
-  findUsersWithPredictions(): Promise<UserWithPredictions[]>;
+  findUsersWithPicks(): Promise<UserWithAllPicks[]>;
+  findGroupResults(): Promise<GroupResult[]>;
 }
 
 export const leaderboardRepository: LeaderboardRepository = {
-  async findUsersWithPredictions() {
+  async findUsersWithPicks() {
     return prisma.user.findMany({
       include: {
+        groupAdvancePicks: true,
+        thirdPlacePicks: true,
         predictions: {
           include: {
             match: true,
@@ -21,5 +33,9 @@ export const leaderboardRepository: LeaderboardRepository = {
       },
       orderBy: { username: "asc" },
     });
+  },
+
+  async findGroupResults() {
+    return prisma.groupResult.findMany();
   },
 };

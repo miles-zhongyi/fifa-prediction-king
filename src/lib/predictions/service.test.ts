@@ -17,7 +17,7 @@ const baseMatch: Match = {
   id: "match-1",
   homeTeam: "Brazil",
   awayTeam: "Argentina",
-  stage: "Group A",
+  stage: "Quarter Final",
   startTime: futureStart,
   winner: null,
   status: MatchStatus.SCHEDULED,

@@ -13,6 +13,6 @@ export {
   type RankableEntry,
   type RankedEntry,
 } from "./ranking";
-export type { LeaderboardRepository, UserWithPredictions } from "./repository";
+export type { LeaderboardRepository, UserWithAllPicks } from "./repository";
 export { leaderboardRepository } from "./repository";
 export { getLeaderboard, type GetLeaderboardOptions } from "./service";

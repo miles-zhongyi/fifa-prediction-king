@@ -1,7 +1,10 @@
 "use client";
 
+import { GroupPicksProvider } from "@/contexts/GroupPicksContext";
 import { MatchesProvider, useMatchesContext } from "@/contexts/MatchesContext";
 import { PredictionsProvider } from "@/contexts/PredictionsContext";
+import { ThirdPlacePicksProvider } from "@/contexts/ThirdPlacePicksContext";
+import { useUser } from "@/contexts/UserContext";
 
 function PredictionsWithMatchSync({
   username,
@@ -19,18 +22,18 @@ function PredictionsWithMatchSync({
   );
 }
 
-export function GameProviders({
-  username,
-  children,
-}: {
-  username: string;
-  children: React.ReactNode;
-}) {
+export function GameProviders({ children }: { children: React.ReactNode }) {
+  const { username, avatarUrl } = useUser();
+
   return (
     <MatchesProvider>
-      <PredictionsWithMatchSync username={username}>
-        {children}
-      </PredictionsWithMatchSync>
+      <GroupPicksProvider username={username} avatarUrl={avatarUrl}>
+        <ThirdPlacePicksProvider username={username} avatarUrl={avatarUrl}>
+          <PredictionsWithMatchSync username={username}>
+            {children}
+          </PredictionsWithMatchSync>
+        </ThirdPlacePicksProvider>
+      </GroupPicksProvider>
     </MatchesProvider>
   );
 }

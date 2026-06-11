@@ -1,53 +1,92 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
-
-model User {
-  id          String       @id @default(cuid())
-  username    String       @unique
-  email       String       @unique
-  avatarUrl   String?
-  createdAt   DateTime     @default(now())
-  predictions Prediction[]
-}
-
-model Match {
-  id          String       @id @default(cuid())
-  homeTeam    String
-  awayTeam    String
-  stage       String
-  startTime   DateTime
-  winner      String?
-  status      MatchStatus  @default(SCHEDULED)
-  createdAt   DateTime     @default(now())
-  predictions Prediction[]
-
-  @@index([startTime])
-  @@index([status])
-}
-
-model Prediction {
-  id           String   @id @default(cuid())
-  userId       String
-  matchId      String
-  predictedWinner String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, matchId])
-  @@index([matchId])
-}
-
-enum MatchStatus {
-  SCHEDULED
-  LIVE
-  FINISHED
-}
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String            @id @default(cuid())
+  username         String            @unique
+  email            String            @unique
+  avatarUrl        String?
+  createdAt        DateTime          @default(now())
+  predictions      Prediction[]
+  groupAdvancePicks GroupAdvancePick[]
+  thirdPlacePicks  ThirdPlacePick[]
+}
+
+model Match {
+  id          String       @id @default(cuid())
+  homeTeam    String
+  awayTeam    String
+  stage       String
+  startTime   DateTime
+  winner      String?
+  status      MatchStatus  @default(SCHEDULED)
+  createdAt   DateTime     @default(now())
+  predictions Prediction[]
+
+  @@index([startTime])
+  @@index([status])
+}
+
+model Prediction {
+  id              String   @id @default(cuid())
+  userId          String
+  matchId         String
+  predictedWinner String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, matchId])
+  @@index([matchId])
+}
+
+model GroupAdvancePick {
+  id        String   @id @default(cuid())
+  userId    String
+  groupKey  String
+  team      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupKey, team])
+  @@index([groupKey, team])
+}
+
+model ThirdPlacePick {
+  id        String   @id @default(cuid())
+  userId    String
+  team      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, team])
+  @@index([team])
+}
+
+model GroupResult {
+  id             String   @id @default(cuid())
+  groupKey       String   @unique
+  advancer1      String?
+  advancer2      String?
+  thirdPlaceTeam String?
+  thirdAdvances  Boolean  @default(false)
+  finalized      Boolean  @default(false)
+  updatedAt      DateTime @updatedAt
+}
+
+enum MatchStatus {
+  SCHEDULED
+  LIVE
+  FINISHED
+}
+

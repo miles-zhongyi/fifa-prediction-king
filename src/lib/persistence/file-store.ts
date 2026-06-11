@@ -32,6 +32,29 @@ export type PersistedGameData = {
     createdAt: string;
     updatedAt: string;
   }>;
+  groupAdvancePicks: Array<{
+    id: string;
+    userId: string;
+    groupKey: string;
+    team: string;
+    createdAt: string;
+  }>;
+  thirdPlacePicks: Array<{
+    id: string;
+    userId: string;
+    team: string;
+    createdAt: string;
+  }>;
+  groupResults: Array<{
+    id: string;
+    groupKey: string;
+    advancer1: string | null;
+    advancer2: string | null;
+    thirdPlaceTeam: string | null;
+    thirdAdvances: boolean;
+    finalized: boolean;
+    updatedAt: string;
+  }>;
 };
 
 export function getGameDataFilePath(): string {
@@ -39,11 +62,15 @@ export function getGameDataFilePath(): string {
 }
 
 export async function exportGameDataToFile(): Promise<void> {
-  const [users, matches, predictions] = await Promise.all([
-    prisma.user.findMany({ orderBy: { createdAt: "asc" } }),
-    prisma.match.findMany({ orderBy: { startTime: "asc" } }),
-    prisma.prediction.findMany({ orderBy: { createdAt: "asc" } }),
-  ]);
+  const [users, matches, predictions, groupAdvancePicks, thirdPlacePicks, groupResults] =
+    await Promise.all([
+      prisma.user.findMany({ orderBy: { createdAt: "asc" } }),
+      prisma.match.findMany({ orderBy: { startTime: "asc" } }),
+      prisma.prediction.findMany({ orderBy: { createdAt: "asc" } }),
+      prisma.groupAdvancePick.findMany({ orderBy: { createdAt: "asc" } }),
+      prisma.thirdPlacePick.findMany({ orderBy: { createdAt: "asc" } }),
+      prisma.groupResult.findMany({ orderBy: { groupKey: "asc" } }),
+    ]);
 
   const payload: PersistedGameData = {
     exportedAt: new Date().toISOString(),
@@ -71,6 +98,29 @@ export async function exportGameDataToFile(): Promise<void> {
       predictedWinner: prediction.predictedWinner,
       createdAt: prediction.createdAt.toISOString(),
       updatedAt: prediction.updatedAt.toISOString(),
+    })),
+    groupAdvancePicks: groupAdvancePicks.map((pick) => ({
+      id: pick.id,
+      userId: pick.userId,
+      groupKey: pick.groupKey,
+      team: pick.team,
+      createdAt: pick.createdAt.toISOString(),
+    })),
+    thirdPlacePicks: thirdPlacePicks.map((pick) => ({
+      id: pick.id,
+      userId: pick.userId,
+      team: pick.team,
+      createdAt: pick.createdAt.toISOString(),
+    })),
+    groupResults: groupResults.map((result) => ({
+      id: result.id,
+      groupKey: result.groupKey,
+      advancer1: result.advancer1,
+      advancer2: result.advancer2,
+      thirdPlaceTeam: result.thirdPlaceTeam,
+      thirdAdvances: result.thirdAdvances,
+      finalized: result.finalized,
+      updatedAt: result.updatedAt.toISOString(),
     })),
   };
 
@@ -119,7 +169,7 @@ export async function restoreGameDataFromFile(): Promise<boolean> {
       });
     }
 
-    for (const prediction of data.predictions) {
+    for (const prediction of data.predictions ?? []) {
       await prisma.prediction.create({
         data: {
           id: prediction.id,
@@ -128,6 +178,44 @@ export async function restoreGameDataFromFile(): Promise<boolean> {
           predictedWinner: prediction.predictedWinner,
           createdAt: new Date(prediction.createdAt),
           updatedAt: new Date(prediction.updatedAt),
+        },
+      });
+    }
+
+    for (const pick of data.groupAdvancePicks ?? []) {
+      await prisma.groupAdvancePick.create({
+        data: {
+          id: pick.id,
+          userId: pick.userId,
+          groupKey: pick.groupKey,
+          team: pick.team,
+          createdAt: new Date(pick.createdAt),
+        },
+      });
+    }
+
+    for (const pick of data.thirdPlacePicks ?? []) {
+      await prisma.thirdPlacePick.create({
+        data: {
+          id: pick.id,
+          userId: pick.userId,
+          team: pick.team,
+          createdAt: new Date(pick.createdAt),
+        },
+      });
+    }
+
+    for (const result of data.groupResults ?? []) {
+      await prisma.groupResult.create({
+        data: {
+          id: result.id,
+          groupKey: result.groupKey,
+          advancer1: result.advancer1,
+          advancer2: result.advancer2,
+          thirdPlaceTeam: result.thirdPlaceTeam,
+          thirdAdvances: result.thirdAdvances,
+          finalized: result.finalized,
+          updatedAt: new Date(result.updatedAt),
         },
       });
     }

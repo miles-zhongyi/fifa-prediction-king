@@ -1,23 +1,18 @@
 "use client";
 
-import { MatchScheduleRow } from "@/components/matches/MatchScheduleRow";
+import { GroupPickCard } from "@/components/picks/GroupPickCard";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorAlert } from "@/components/ui/ErrorAlert";
 import { LoadingState } from "@/components/ui/LoadingState";
-import { useMatchesContext } from "@/contexts/MatchesContext";
-import {
-  filterOpenGroupStageMatches,
-  groupMatchesByDate,
-} from "@/lib/match-utils";
+import { useGroupPicksContext } from "@/contexts/GroupPicksContext";
+import { MAX_GROUP_ADVANCERS } from "@/lib/groups";
 
 export function Dashboard() {
-  const { matches, loading, error, reload } = useMatchesContext();
-  const openGroupMatches = filterOpenGroupStageMatches(matches);
-  const matchesByDate = groupMatchesByDate(openGroupMatches);
+  const { boards, loading, error, reload, togglePick, getUserPicksForGroup } =
+    useGroupPicksContext();
 
-  if (loading) {
-    return <LoadingState message="Loading group stage matches..." />;
+  if (loading && boards.length === 0) {
+    return <LoadingState message="Loading group picks..." />;
   }
 
   if (error) {
@@ -28,30 +23,19 @@ export function Dashboard() {
     <>
       <PageHeader
         title="Group Stage"
-        description={`${openGroupMatches.length} match${openGroupMatches.length === 1 ? "" : "es"} open for prediction`}
+        description={`Pick ${MAX_GROUP_ADVANCERS} teams to advance from each group. Picks lock after June 19, 2026.`}
       />
 
-      {openGroupMatches.length === 0 ? (
-        <EmptyState
-          title="No open group stage matches"
-          description="All group games may have started or finished. Check the leaderboard for results."
-        />
-      ) : (
-        <div className="space-y-6">
-          {matchesByDate.map(({ heading, matches: dayMatches }) => (
-            <section key={heading} className="card overflow-hidden">
-              <h2 className="border-b border-[var(--border)] bg-white/[0.03] px-4 py-3 text-sm font-semibold">
-                {heading}
-              </h2>
-              <div>
-                {dayMatches.map((match) => (
-                  <MatchScheduleRow key={match.id} match={match} />
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
-      )}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {boards.map((board) => (
+          <GroupPickCard
+            key={board.groupKey}
+            board={board}
+            userPicks={getUserPicksForGroup(board.groupKey)}
+            onToggle={(team) => togglePick(board.groupKey, team)}
+          />
+        ))}
+      </div>
     </>
   );
 }
