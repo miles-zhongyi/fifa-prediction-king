@@ -10,7 +10,11 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(request: Request) {
   try {
-    await syncMatchResultsFromApi();
+    try {
+      await syncMatchResultsFromApi();
+    } catch (error) {
+      console.error("Match sync failed:", error);
+    }
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");

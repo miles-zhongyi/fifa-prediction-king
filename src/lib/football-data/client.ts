@@ -81,15 +81,21 @@ export async function fetchWorldCupMatches(
     return [];
   }
 
-  const response = await fetch(
-    `https://api.football-data.org/v4/competitions/WC/matches?season=${season}`,
-    {
-      headers: {
-        "X-Auth-Token": apiKey,
+  let response: Response;
+  try {
+    response = await fetch(
+      `https://api.football-data.org/v4/competitions/WC/matches?season=${season}`,
+      {
+        headers: {
+          "X-Auth-Token": apiKey,
+        },
+        next: { revalidate: 0 },
       },
-      next: { revalidate: 0 },
-    },
-  );
+    );
+  } catch (error) {
+    console.error("football-data.org sync failed: network error", error);
+    return [];
+  }
 
   if (!response.ok) {
     console.error(
