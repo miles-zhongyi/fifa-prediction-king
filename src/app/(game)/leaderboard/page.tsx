@@ -1,5 +1,5 @@
-import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
+import { ResultsLeaderboardPage } from "@/components/results/ResultsLeaderboardPage";
 
 export default function LeaderboardPage() {
-  return <LeaderboardTable />;
+  return <ResultsLeaderboardPage />;
 }

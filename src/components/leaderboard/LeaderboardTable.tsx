@@ -9,7 +9,11 @@ import { useUser } from "@/contexts/UserContext";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { formatPoints } from "@/lib/leaderboard/scoring";
 
-export function LeaderboardTable() {
+type LeaderboardTableProps = {
+  embedded?: boolean;
+};
+
+export function LeaderboardTable({ embedded = false }: LeaderboardTableProps) {
   const { username } = useUser();
   const { entries, loading, error, reload } = useLeaderboard();
 
@@ -21,14 +25,7 @@ export function LeaderboardTable() {
     return <ErrorAlert message={error} onRetry={() => void reload()} />;
   }
 
-  return (
-    <>
-      <PageHeader
-        title="Leaderboard"
-        description="Group advancers & 3rd place: 1 pt each · Knockout round picks: 0.5 pt each"
-      />
-
-      {entries.length === 0 ? (
+  const table = entries.length === 0 ? (
         <EmptyState
           title="No players yet"
           description="Be the first to make a prediction!"
@@ -112,7 +109,19 @@ export function LeaderboardTable() {
             </table>
           </div>
         </div>
-      )}
+  );
+
+  if (embedded) {
+    return table;
+  }
+
+  return (
+    <>
+      <PageHeader
+        title="Leaderboard"
+        description="Group advancers & 3rd place: 1 pt each · Knockout round picks: 0.5 pt each"
+      />
+      {table}
     </>
   );
 }

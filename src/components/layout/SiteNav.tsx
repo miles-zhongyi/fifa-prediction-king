@@ -11,8 +11,7 @@ const links = [
   { href: "/", label: "Groups" },
   { href: "/third-place", label: "3rd Place" },
   { href: "/knockout", label: "Knockout" },
-  { href: "/matches", label: "Results" },
-  { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/leaderboard", label: "Results" },
 ];
 
 export function SiteNav() {
@@ -68,7 +67,7 @@ export function SiteNav() {
           <div className="hidden min-w-0 border-l border-[var(--border)] pl-4 sm:block">
             <p className="truncate text-sm font-semibold">FIFA World Cup 2026</p>
             <p className="truncate text-xs text-[var(--muted)]">
-              Prediction King
+              Prediction Champion
             </p>
           </div>
 

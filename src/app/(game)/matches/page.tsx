@@ -1,5 +1,5 @@
-import { MatchResultsBoard } from "@/components/matches/MatchResultsBoard";
+import { redirect } from "next/navigation";
 
 export default function MatchesPage() {
-  return <MatchResultsBoard />;
+  redirect("/leaderboard");
 }

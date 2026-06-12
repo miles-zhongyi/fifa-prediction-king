@@ -26,7 +26,11 @@ function formatScore(
   return `${homeScore} – ${awayScore}`;
 }
 
-export function MatchResultsBoard() {
+type MatchResultsBoardProps = {
+  embedded?: boolean;
+};
+
+export function MatchResultsBoard({ embedded = false }: MatchResultsBoardProps) {
   const { matches, loading, error, reload } = useMatchesContext();
 
   if (loading && matches.length === 0) {
@@ -41,13 +45,7 @@ export function MatchResultsBoard() {
   const knockoutMatches = filterKnockoutMatches(matches);
   const groupedGroupMatches = groupMatchesByDate(groupMatches);
 
-  return (
-    <>
-      <PageHeader
-        title="Match Results"
-        description="Live scores sync from football-data.org when an API key is configured. Advance picks show ✓ when correct and ✗ when eliminated."
-      />
-
+  const content = (
       <div className="space-y-8">
         {groupedGroupMatches.map(({ heading, matches: dayMatches }) => (
           <section key={heading}>
@@ -179,6 +177,19 @@ export function MatchResultsBoard() {
           </section>
         )}
       </div>
+  );
+
+  if (embedded) {
+    return content;
+  }
+
+  return (
+    <>
+      <PageHeader
+        title="Match Results"
+        description="Live scores sync from football-data.org when an API key is configured. Advance picks show ✓ when correct and ✗ when eliminated."
+      />
+      {content}
     </>
   );
 }
