@@ -187,7 +187,7 @@ export function MatchResultsBoard({ embedded = false }: MatchResultsBoardProps) 
     <>
       <PageHeader
         title="Match Results"
-        description="Live scores sync from football-data.org when an API key is configured. Advance picks show ✓ when correct and ✗ when eliminated."
+        description="Live scores sync from football-data.org when an API key is configured. Advance picks show ✓/✗ per finished match, then final Advanced/Eliminated once the group completes."
       />
       {content}
     </>

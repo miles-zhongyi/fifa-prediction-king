@@ -7,7 +7,7 @@ services:
       DATABASE_URL: file:/data/prod.db
       DATA_DIR: /data
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme}
-      FOOTBALL_DATA_API_KEY: ${FOOTBALL_DATA_API_KEY:-651db4dfe47f49f4a7b2bfc18cec64b0}
+      FOOTBALL_DATA_API_KEY: ${FOOTBALL_DATA_API_KEY}
     volumes:
       - fifa-data:/data
     restart: unless-stopped

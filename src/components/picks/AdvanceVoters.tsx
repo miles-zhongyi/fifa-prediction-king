@@ -12,8 +12,10 @@ type AdvanceVotersProps = {
 function outcomeRing(outcome: AdvanceVoter["outcome"]): string {
   switch (outcome) {
     case "correct":
+    case "match_won":
       return "ring-2 ring-emerald-400";
     case "incorrect":
+    case "match_lost":
       return "ring-2 ring-red-400";
     default:
       return "ring-1 ring-[var(--border)]";
@@ -26,6 +28,10 @@ function outcomeLabel(outcome: AdvanceVoter["outcome"]): string {
       return "Advanced";
     case "incorrect":
       return "Eliminated";
+    case "match_won":
+      return "Won this match";
+    case "match_lost":
+      return "Lost this match";
     default:
       return "Pending";
   }
@@ -68,10 +74,11 @@ export function AdvanceVoters({
               size={24}
               className={outcomeRing(voter.outcome)}
             />
-            {voter.outcome === "correct" && (
+            {(voter.outcome === "correct" || voter.outcome === "match_won") && (
               <span className="text-xs text-emerald-400">✓</span>
             )}
-            {voter.outcome === "incorrect" && (
+            {(voter.outcome === "incorrect" ||
+              voter.outcome === "match_lost") && (
               <span className="text-xs text-red-400">✗</span>
             )}
           </div>

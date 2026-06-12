@@ -1,10 +1,15 @@
-import type { GroupResult } from "@prisma/client";
+import { MatchStatus, type GroupResult } from "@prisma/client";
 import { resolveUserAvatarUrl } from "@/lib/avatar";
 import { normalizeGroupKey, type GroupKey } from "@/lib/groups";
 import { parseGroupKeyFromStage } from "@/lib/match-utils";
 import { prisma } from "@/lib/prisma";
 
-export type AdvanceVoterOutcome = "correct" | "incorrect" | "pending";
+export type AdvanceVoterOutcome =
+  | "correct"
+  | "incorrect"
+  | "match_won"
+  | "match_lost"
+  | "pending";
 
 export type AdvanceVoter = {
   userId: string;
@@ -18,27 +23,46 @@ export type TeamAdvanceVoters = {
   voters: AdvanceVoter[];
 };
 
+type MatchContext = {
+  homeTeam: string;
+  awayTeam: string;
+  status: MatchStatus;
+  winner: string | null;
+};
+
 function getTeamOutcome(
   team: string,
   groupResult: GroupResult | null,
+  match: MatchContext,
 ): AdvanceVoterOutcome {
-  if (!groupResult?.finalized) {
-    return "pending";
+  if (groupResult?.finalized) {
+    const advancers = [groupResult.advancer1, groupResult.advancer2].filter(
+      (entry): entry is string => Boolean(entry),
+    );
+
+    return advancers.includes(team) ? "correct" : "incorrect";
   }
 
-  const advancers = [groupResult.advancer1, groupResult.advancer2].filter(
-    (entry): entry is string => Boolean(entry),
-  );
-
-  if (advancers.includes(team)) {
-    return "correct";
+  if (match.status === MatchStatus.FINISHED && match.winner) {
+    const teamPlayed =
+      match.homeTeam === team || match.awayTeam === team;
+    if (teamPlayed) {
+      return match.winner === team ? "match_won" : "match_lost";
+    }
   }
 
-  return "incorrect";
+  return "pending";
 }
 
 export async function getAdvanceVotersForMatches(
-  matches: Array<{ id: string; stage: string; homeTeam: string; awayTeam: string }>,
+  matches: Array<{
+    id: string;
+    stage: string;
+    homeTeam: string;
+    awayTeam: string;
+    status: MatchStatus;
+    winner: string | null;
+  }>,
 ): Promise<Map<string, { home: TeamAdvanceVoters; away: TeamAdvanceVoters }>> {
   const result = new Map<
     string,
@@ -84,12 +108,19 @@ export async function getAdvanceVotersForMatches(
   }
 
   for (const match of matches) {
-    const groupKey = parseGroupKeyFromStage(match.stage);
-    if (!groupKey) {
+    const parsedGroupKey = parseGroupKeyFromStage(match.stage);
+    if (!parsedGroupKey) {
       continue;
     }
 
+    const groupKey = normalizeGroupKey(parsedGroupKey);
     const groupResult = resultsByGroup.get(groupKey) ?? null;
+    const matchContext: MatchContext = {
+      homeTeam: match.homeTeam,
+      awayTeam: match.awayTeam,
+      status: match.status,
+      winner: match.winner,
+    };
 
     const buildVoters = (team: string): TeamAdvanceVoters => ({
       team,
@@ -101,7 +132,7 @@ export async function getAdvanceVotersForMatches(
             pick.user.username,
             pick.user.avatarUrl,
           ),
-          outcome: getTeamOutcome(team, groupResult),
+          outcome: getTeamOutcome(team, groupResult, matchContext),
         }),
       ),
     });

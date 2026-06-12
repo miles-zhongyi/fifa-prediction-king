@@ -38,6 +38,8 @@ export async function GET(request: Request) {
         stage: match.stage,
         homeTeam: match.homeTeam,
         awayTeam: match.awayTeam,
+        status: match.status,
+        winner: match.winner,
       })),
     );
 

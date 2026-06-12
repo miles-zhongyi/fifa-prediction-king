@@ -8,7 +8,12 @@ export type MatchCorrectPredictor = {
   avatarUrl: string;
 };
 
-export type AdvanceVoterOutcome = "correct" | "incorrect" | "pending";
+export type AdvanceVoterOutcome =
+  | "correct"
+  | "incorrect"
+  | "match_won"
+  | "match_lost"
+  | "pending";
 
 export type AdvanceVoter = {
   userId: string;
