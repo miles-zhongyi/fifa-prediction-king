@@ -98,6 +98,11 @@ export function isGroupStageMatch(stage: string): boolean {
   return /^group\s+[a-l]$/i.test(stage.trim());
 }
 
+export function parseGroupKeyFromStage(stage: string): string | null {
+  const match = stage.trim().match(/^group\s+([a-l])$/i);
+  return match ? match[1].toUpperCase() : null;
+}
+
 function normalizeStageKey(stage: string): string {
   return stage.trim().toLowerCase().replace(/[\s_-]+/g, "");
 }

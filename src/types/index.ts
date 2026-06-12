@@ -8,11 +8,29 @@ export type MatchCorrectPredictor = {
   avatarUrl: string;
 };
 
+export type AdvanceVoterOutcome = "correct" | "incorrect" | "pending";
+
+export type AdvanceVoter = {
+  userId: string;
+  username: string;
+  avatarUrl: string;
+  outcome: AdvanceVoterOutcome;
+};
+
+export type TeamAdvanceVoters = {
+  team: string;
+  voters: AdvanceVoter[];
+};
+
 export type MatchWithPredictionCount = Match & {
   _count: {
     predictions: number;
   };
   correctPredictors?: MatchCorrectPredictor[];
+  advanceVoters?: {
+    home: TeamAdvanceVoters;
+    away: TeamAdvanceVoters;
+  };
 };
 
 export type PredictionWithRelations = Prediction & {

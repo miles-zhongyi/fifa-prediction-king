@@ -25,6 +25,8 @@ model Match {
   awayTeam    String
   stage       String
   startTime   DateTime
+  homeScore   Int?
+  awayScore   Int?
   winner      String?
   status      MatchStatus  @default(SCHEDULED)
   createdAt   DateTime     @default(now())

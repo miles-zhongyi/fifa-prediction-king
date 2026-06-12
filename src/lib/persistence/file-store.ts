@@ -20,6 +20,8 @@ export type PersistedGameData = {
     awayTeam: string;
     stage: string;
     startTime: string;
+    homeScore: number | null;
+    awayScore: number | null;
     winner: string | null;
     status: string;
     createdAt: string;
@@ -110,6 +112,8 @@ export async function exportGameDataToFile(): Promise<void> {
       awayTeam: match.awayTeam,
       stage: match.stage,
       startTime: match.startTime.toISOString(),
+      homeScore: match.homeScore,
+      awayScore: match.awayScore,
       winner: match.winner,
       status: match.status,
       createdAt: match.createdAt.toISOString(),
@@ -198,6 +202,8 @@ export async function restoreGameDataFromFile(): Promise<boolean> {
           awayTeam: match.awayTeam,
           stage: match.stage,
           startTime: new Date(match.startTime),
+          homeScore: match.homeScore ?? null,
+          awayScore: match.awayScore ?? null,
           winner: match.winner,
           status: match.status as never,
           createdAt: new Date(match.createdAt),

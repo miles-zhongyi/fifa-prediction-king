@@ -1,13 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { MatchCorrectPredictor } from "@/types";
-import type { Match } from "@/types";
+import type { MatchWithPredictionCount } from "@/types";
 
-export type MatchWithCount = Match & {
-  _count: { predictions: number };
-  correctPredictors?: MatchCorrectPredictor[];
-};
+export type MatchWithCount = MatchWithPredictionCount;
 
 export function useMatches() {
   const [matches, setMatches] = useState<MatchWithCount[]>([]);

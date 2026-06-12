@@ -11,6 +11,7 @@ const links = [
   { href: "/", label: "Groups" },
   { href: "/third-place", label: "3rd Place" },
   { href: "/knockout", label: "Knockout" },
+  { href: "/matches", label: "Results" },
   { href: "/leaderboard", label: "Leaderboard" },
 ];
 

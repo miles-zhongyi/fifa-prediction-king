@@ -13,6 +13,8 @@ services:
         value: /data
       - key: ADMIN_PASSWORD
         sync: false
+      - key: FOOTBALL_DATA_API_KEY
+        sync: false
     disk:
       name: fifa-data
       mountPath: /data

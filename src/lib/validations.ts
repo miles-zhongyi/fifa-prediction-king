@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { toDodonaEmail } from "@/lib/email";
 
 const usernameSchema = z
   .string()
@@ -11,25 +10,22 @@ const usernameSchema = z
     "Username may only contain letters, numbers, and underscores",
   );
 
-const emailLocalPartSchema = z
+const emailSchema = z
   .string()
   .trim()
-  .min(1, "Email username is required")
-  .max(64, "Email username is too long")
-  .regex(
-    /^[a-zA-Z0-9._-]+$/,
-    "Email username may only contain letters, numbers, dots, underscores, and hyphens",
-  );
+  .toLowerCase()
+  .email("Enter a valid email address")
+  .max(254, "Email is too long");
 
 export const createUserSchema = z.object({
   username: usernameSchema,
-  email: emailLocalPartSchema,
+  email: emailSchema,
 });
 
 export function parseCreateUserInput(input: z.infer<typeof createUserSchema>) {
   return {
     username: input.username,
-    email: toDodonaEmail(input.email),
+    email: input.email,
   };
 }
 

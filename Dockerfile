@@ -36,6 +36,8 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/src ./src
 
+RUN chown -R nextjs:nodejs /app/.next /data
+
 USER nextjs
 EXPOSE 3000
 

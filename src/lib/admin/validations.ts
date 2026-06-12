@@ -33,6 +33,8 @@ export const adminUpdateMatchSchema = z
       .date({ invalid_type_error: "Start time is invalid" })
       .optional(),
     winner: z.string().trim().min(1).nullable().optional(),
+    homeScore: z.number().int().min(0).nullable().optional(),
+    awayScore: z.number().int().min(0).nullable().optional(),
     status: z.nativeEnum(MatchStatus).optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
@@ -50,6 +52,8 @@ export type AdminCompleteMatchInput = z.infer<typeof adminCompleteMatchSchema>;
 export type MatchFields = {
   homeTeam: string;
   awayTeam: string;
+  homeScore?: number | null;
+  awayScore?: number | null;
   winner: string | null;
   status: MatchStatus;
 };
@@ -67,9 +71,18 @@ export function validateFinishedMatchState(match: MatchFields): void {
     return;
   }
 
-  if (!match.winner) {
+  const isDraw =
+    match.homeScore !== null &&
+    match.homeScore !== undefined &&
+    match.awayScore !== null &&
+    match.awayScore !== undefined &&
+    match.homeScore === match.awayScore;
+
+  if (!match.winner && !isDraw) {
     throw new Error("Winner is required when a match is marked as completed");
   }
 
-  validateWinnerForMatch(match.winner, match.homeTeam, match.awayTeam);
+  if (match.winner) {
+    validateWinnerForMatch(match.winner, match.homeTeam, match.awayTeam);
+  }
 }

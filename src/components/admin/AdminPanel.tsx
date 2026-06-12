@@ -17,6 +17,8 @@ export function AdminPanel() {
   const [matches, setMatches] = useState<AdminMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   const loadMatches = useCallback(async () => {
     setError(null);
@@ -43,6 +45,43 @@ export function AdminPanel() {
   useEffect(() => {
     void loadMatches();
   }, [loadMatches]);
+
+  async function syncMatchResults() {
+    setSyncing(true);
+    setSyncMessage(null);
+    setError(null);
+
+    try {
+      const response = await adminFetch("/api/admin/sync-matches", {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.error ?? "Failed to sync match results");
+      }
+
+      const result = (await response.json()) as {
+        updated: number;
+        skipped?: boolean;
+      };
+
+      setSyncMessage(
+        result.skipped
+          ? "Sync skipped (no API key or throttled)."
+          : `Synced ${result.updated} match(es) from football-data.org.`,
+      );
+      await loadMatches();
+    } catch (syncError) {
+      setError(
+        syncError instanceof Error
+          ? syncError.message
+          : "Failed to sync match results",
+      );
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   return (
     <div className="min-h-screen">
@@ -78,6 +117,29 @@ export function AdminPanel() {
 
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-6">
         <CreateMatchForm onCreated={() => void loadMatches()} />
+
+        <section className="card p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold">Live score sync</h2>
+              <p className="text-sm text-[var(--muted)]">
+                Pulls finished match scores from football-data.org when{" "}
+                <code className="text-xs">FOOTBALL_DATA_API_KEY</code> is set.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void syncMatchResults()}
+              disabled={syncing}
+              className="btn-primary"
+            >
+              {syncing ? "Syncing..." : "Sync now"}
+            </button>
+          </div>
+          {syncMessage && (
+            <p className="mt-3 text-sm text-emerald-300">{syncMessage}</p>
+          )}
+        </section>
 
         <section>
           <div className="mb-4 flex items-center justify-between gap-3">

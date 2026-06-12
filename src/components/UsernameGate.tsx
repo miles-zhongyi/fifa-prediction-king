@@ -5,7 +5,6 @@ import { FormEvent, useEffect, useState } from "react";
 import { GameProviders } from "@/components/GameProviders";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { UserProvider } from "@/contexts/UserContext";
-import { DODONA_EMAIL_DOMAIN, splitDodonaEmail } from "@/lib/email";
 import {
   clearStoredUserSession,
   getStoredUserSession,
@@ -25,7 +24,7 @@ type UserSession = {
 export function UsernameGate({ children }: UsernameGateProps) {
   const [session, setSession] = useState<UserSession | null>(null);
   const [usernameInput, setUsernameInput] = useState("");
-  const [emailLocalInput, setEmailLocalInput] = useState("");
+  const [emailInput, setEmailInput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -33,16 +32,13 @@ export function UsernameGate({ children }: UsernameGateProps) {
   useEffect(() => {
     const stored = getStoredUserSession();
     if (stored?.username) {
-      const { localPart } = splitDodonaEmail(stored.email);
       setSession({
         username: stored.username,
-        email: stored.email.includes("@")
-          ? stored.email
-          : `${localPart}${DODONA_EMAIL_DOMAIN}`,
+        email: stored.email,
         avatarUrl: stored.avatarUrl ?? null,
       });
       setUsernameInput(stored.username);
-      setEmailLocalInput(localPart);
+      setEmailInput(stored.email);
     }
     setHydrated(true);
   }, []);
@@ -51,7 +47,7 @@ export function UsernameGate({ children }: UsernameGateProps) {
     clearStoredUserSession();
     setSession(null);
     setUsernameInput("");
-    setEmailLocalInput("");
+    setEmailInput("");
   }
 
   function updateAvatarUrl(avatarUrl: string) {
@@ -77,7 +73,7 @@ export function UsernameGate({ children }: UsernameGateProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           username: usernameInput,
-          email: emailLocalInput,
+          email: emailInput,
         }),
       });
 
@@ -136,8 +132,7 @@ export function UsernameGate({ children }: UsernameGateProps) {
 
           <h1 className="text-2xl font-bold">FIFA Prediction King</h1>
           <p className="mt-2 text-sm text-[var(--muted)]">
-            Enter your username and Dodona email to start predicting match
-            winners.
+            Enter your username and email to start making predictions.
           </p>
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
@@ -162,21 +157,16 @@ export function UsernameGate({ children }: UsernameGateProps) {
               <label htmlFor="email" className="mb-2 block text-sm font-medium">
                 Email
               </label>
-              <div className="flex overflow-hidden rounded-lg border border-[var(--border)] bg-black/20 focus-within:border-[var(--accent)]">
-                <input
-                  id="email"
-                  type="text"
-                  value={emailLocalInput}
-                  onChange={(event) => setEmailLocalInput(event.target.value)}
-                  placeholder="your.name"
-                  className="min-w-0 flex-1 border-0 bg-transparent px-3 py-2 text-sm outline-none"
-                  required
-                  autoComplete="username"
-                />
-                <span className="flex shrink-0 items-center border-l border-[var(--border)] bg-white/5 px-3 text-sm text-[var(--muted)]">
-                  {DODONA_EMAIL_DOMAIN}
-                </span>
-              </div>
+              <input
+                id="email"
+                type="email"
+                value={emailInput}
+                onChange={(event) => setEmailInput(event.target.value)}
+                placeholder="you@example.com"
+                className="input"
+                required
+                autoComplete="email"
+              />
             </div>
 
             {error && (

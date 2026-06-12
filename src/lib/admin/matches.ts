@@ -67,6 +67,10 @@ export async function updateAdminMatch(matchId: string, rawInput: unknown) {
   const nextState = {
     homeTeam: data.homeTeam ?? existing.homeTeam,
     awayTeam: data.awayTeam ?? existing.awayTeam,
+    homeScore:
+      data.homeScore !== undefined ? data.homeScore : existing.homeScore,
+    awayScore:
+      data.awayScore !== undefined ? data.awayScore : existing.awayScore,
     winner: data.winner !== undefined ? data.winner : existing.winner,
     status: data.status ?? existing.status,
   };
