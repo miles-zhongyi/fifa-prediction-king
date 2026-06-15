@@ -19,6 +19,8 @@ export function AdminPanel() {
   const [error, setError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportMessage, setExportMessage] = useState<string | null>(null);
 
   const loadMatches = useCallback(async () => {
     setError(null);
@@ -83,6 +85,43 @@ export function AdminPanel() {
     }
   }
 
+  async function downloadExport() {
+    setExporting(true);
+    setExportMessage(null);
+    setError(null);
+
+    try {
+      const response = await adminFetch("/api/admin/export-data");
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.error ?? "Failed to export data");
+      }
+
+      const blob = await response.blob();
+      const disposition = response.headers.get("Content-Disposition") ?? "";
+      const filenameMatch = disposition.match(/filename="([^"]+)"/);
+      const filename = filenameMatch?.[1] ?? "fifa-export.tar.gz";
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      setExportMessage(`Downloaded ${filename}. Send this file to your server admin.`);
+    } catch (exportError) {
+      setError(
+        exportError instanceof Error
+          ? exportError.message
+          : "Failed to export data",
+      );
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <div className="min-h-screen">
       <header className="border-b border-[var(--border)] bg-black/20 backdrop-blur">
@@ -138,6 +177,30 @@ export function AdminPanel() {
           </div>
           {syncMessage && (
             <p className="mt-3 text-sm text-emerald-300">{syncMessage}</p>
+          )}
+        </section>
+
+        <section className="card p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold">Export site data</h2>
+              <p className="text-sm text-[var(--muted)]">
+                Downloads <code className="text-xs">prod.db</code>,{" "}
+                <code className="text-xs">game-data.json</code>, and uploaded
+                avatars as a <code className="text-xs">.tar.gz</code> archive.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void downloadExport()}
+              disabled={exporting}
+              className="btn-primary"
+            >
+              {exporting ? "Preparing..." : "Download export"}
+            </button>
+          </div>
+          {exportMessage && (
+            <p className="mt-3 text-sm text-emerald-300">{exportMessage}</p>
           )}
         </section>
 
