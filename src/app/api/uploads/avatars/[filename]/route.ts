@@ -30,7 +30,7 @@ export async function GET(_request: Request, context: RouteContext) {
     return new Response(buffer, {
       headers: {
         "Content-Type": CONTENT_TYPES[extension] ?? "application/octet-stream",
-        "Cache-Control": "public, max-age=86400",
+        "Cache-Control": "private, no-cache, must-revalidate",
       },
     });
   } catch {

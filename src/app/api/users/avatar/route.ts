@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "fs/promises";
+import { mkdir, readdir, unlink, writeFile } from "fs/promises";
 import path from "path";
 import {
   buildAvatarPublicPath,
@@ -10,6 +10,16 @@ import { prisma } from "@/lib/prisma";
 
 const MAX_BYTES = 2 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+async function removePreviousAvatars(uploadsDir: string, userId: string) {
+  const entries = await readdir(uploadsDir).catch(() => [] as string[]);
+
+  await Promise.all(
+    entries
+      .filter((entry) => entry.startsWith(`${userId}.`) || entry.startsWith(`${userId}-`))
+      .map((entry) => unlink(path.join(uploadsDir, entry)).catch(() => undefined)),
+  );
+}
 
 export async function POST(request: Request) {
   try {
@@ -48,7 +58,9 @@ export async function POST(request: Request) {
     const uploadsDir = getAvatarUploadDir();
     await mkdir(uploadsDir, { recursive: true });
 
-    const filename = `${user.id}.${extension}`;
+    await removePreviousAvatars(uploadsDir, user.id);
+
+    const filename = `${user.id}-${Date.now()}.${extension}`;
     const diskPath = path.join(uploadsDir, filename);
     const publicPath = buildAvatarPublicPath(filename);
 

@@ -22,6 +22,7 @@ export function UserAvatar({
 
   return (
     <Image
+      key={src}
       src={src}
       alt={`${username} avatar`}
       title={title ?? username}
