@@ -39,12 +39,6 @@ export function LeaderboardTable({ embedded = false }: LeaderboardTableProps) {
                   <th className="px-4 py-3 font-medium">Rank</th>
                   <th className="px-4 py-3 font-medium">Player</th>
                   <th className="px-4 py-3 font-medium text-right">Points</th>
-                  <th className="hidden px-4 py-3 font-medium text-right sm:table-cell">
-                    Correct
-                  </th>
-                  <th className="hidden px-4 py-3 font-medium text-right md:table-cell">
-                    Total
-                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border)]">
@@ -95,12 +89,6 @@ export function LeaderboardTable({ embedded = false }: LeaderboardTableProps) {
                       </td>
                       <td className="px-4 py-3 text-right text-lg font-bold tabular-nums">
                         {formatPoints(entry.points)}
-                      </td>
-                      <td className="hidden px-4 py-3 text-right tabular-nums text-[var(--muted)] sm:table-cell">
-                        {entry.correctPredictions}
-                      </td>
-                      <td className="hidden px-4 py-3 text-right tabular-nums text-[var(--muted)] md:table-cell">
-                        {entry.totalPredictions}
                       </td>
                     </tr>
                   );
