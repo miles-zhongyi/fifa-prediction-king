@@ -10,7 +10,7 @@ import {
   getUserAdvancingPool,
   isAdvancingPoolComplete,
 } from "@/lib/knockout-pool";
-import { isKnockoutRoundsLocked } from "@/lib/knockout-round-picks/locking";
+import { isKnockoutRoundLocked, isKnockoutRoundsLocked } from "@/lib/knockout-round-picks/locking";
 import { knockoutRoundPickSchema } from "@/lib/knockout-round-picks/validation";
 import { prisma } from "@/lib/prisma";
 import { PredictionServiceError } from "@/lib/predictions/errors";
@@ -107,9 +107,9 @@ export async function toggleKnockoutRoundPick(rawInput: unknown) {
     );
   }
 
-  if (await isKnockoutRoundsLocked()) {
+  if (isKnockoutRoundLocked(input.round)) {
     throw new PredictionServiceError(
-      "Knockout round picks are locked once the knockout stage begins",
+      "Picks for this round are locked — the round has already started or starts within 24 hours",
       400,
     );
   }
@@ -169,7 +169,7 @@ export async function getUserKnockoutRoundPicks(username: string) {
 }
 
 export async function getKnockoutRoundPickBoard() {
-  const [picks, results, locked] = await Promise.all([
+  const [picks, results] = await Promise.all([
     prisma.knockoutRoundPick.findMany({
       include: {
         user: {
@@ -179,8 +179,8 @@ export async function getKnockoutRoundPickBoard() {
       orderBy: { createdAt: "asc" },
     }),
     prisma.knockoutRoundResult.findMany(),
-    isKnockoutRoundsLocked(),
   ]);
+  const locked = isKnockoutRoundLocked("TOP16");
 
   const picksByRoundTeam: Record<string, Record<string, RoundVoterSummary[]>> =
     {};

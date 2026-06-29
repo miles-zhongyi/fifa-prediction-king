@@ -9,7 +9,7 @@ export function ResultsLeaderboardPage() {
     <>
       <PageHeader
         title="Results & Leaderboard"
-        description="Live match scores and rankings. Group advancers & 3rd place: 1 pt each · Knockout round picks: 0.5 pt each."
+        description="Live match scores and rankings. Group advancers & 3rd place: 1 pt each · Knockout round picks: 0.5 pt each · Champion pick: 2 pts"
       />
 
       <div className="space-y-12">

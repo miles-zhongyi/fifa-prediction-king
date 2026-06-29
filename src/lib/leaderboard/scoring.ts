@@ -7,7 +7,21 @@ export const STAGE_POINTS = {
   THIRD_PLACE: 1,
   KNOCKOUT: 0.5,
   KNOCKOUT_ROUND: 0.5,
+  CHAMPION: 2,
 } as const;
+
+// The 8 third-place teams that advance to the Round of 16 (best 8 of 12).
+// Hardcoded here so scoring is never dependent on the DB's thirdAdvances field.
+export const ADVANCING_THIRD_PLACE_TEAMS = new Set([
+  "Bosnia and Herzegovina", // Group B
+  "Paraguay",               // Group D
+  "Ecuador",                // Group E
+  "Sweden",                 // Group F
+  "Senegal",                // Group I
+  "Algeria",                // Group J
+  "DR Congo",               // Group K
+  "Ghana",                  // Group L
+]);
 
 export type ScoredPrediction = {
   predictedWinner: string;
@@ -72,11 +86,13 @@ export function isCorrectThirdPlacePick(
   pick: ScoredThirdPlacePick,
   results: GroupResult[],
 ): boolean {
+  // Check hardcoded list first — never depends on the DB's thirdAdvances field.
+  if (!ADVANCING_THIRD_PLACE_TEAMS.has(pick.team)) {
+    return false;
+  }
+  // Verify the group is finalized and the team is actually the 3rd-place finisher.
   return results.some(
-    (result) =>
-      result.finalized &&
-      result.thirdAdvances &&
-      result.thirdPlaceTeam === pick.team,
+    (result) => result.finalized && result.thirdPlaceTeam === pick.team,
   );
 }
 
@@ -84,14 +100,8 @@ export function isCorrectKnockoutRoundPick(
   pick: ScoredKnockoutRoundPick,
   results: KnockoutRoundResultEntry[],
 ): boolean {
-  const result = results.find(
-    (entry) => entry.round === pick.round && entry.finalized,
-  );
-
-  if (!result) {
-    return false;
-  }
-
+  const result = results.find((entry) => entry.round === pick.round);
+  if (!result) return false;
   return result.teams.includes(pick.team);
 }
 
@@ -123,7 +133,7 @@ export function calculateUserStats(input: {
   for (const pick of input.knockoutRoundPicks) {
     if (isCorrectKnockoutRoundPick(pick, input.knockoutRoundResults)) {
       correctPredictions += 1;
-      points += STAGE_POINTS.KNOCKOUT_ROUND;
+      points += pick.round === "WINNER" ? STAGE_POINTS.CHAMPION : STAGE_POINTS.KNOCKOUT_ROUND;
     }
   }
 

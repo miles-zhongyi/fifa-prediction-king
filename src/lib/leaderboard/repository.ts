@@ -26,6 +26,7 @@ export interface LeaderboardRepository {
 export const leaderboardRepository: LeaderboardRepository = {
   async findUsersWithPicks() {
     return prisma.user.findMany({
+      where: { hidden: false },
       include: {
         groupAdvancePicks: true,
         thirdPlacePicks: true,
