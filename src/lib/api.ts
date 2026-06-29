@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 import { AdminAuthError } from "@/lib/admin/auth";
 import { isAdminServiceError } from "@/lib/admin/errors";
 import { isPredictionServiceError } from "@/lib/predictions";
+import { isUserNotFoundError } from "@/lib/users";
 import type { ApiError } from "@/types";
 
 export function jsonResponse<T>(data: T, status = 200) {
@@ -32,6 +33,10 @@ export function handleApiError(error: unknown) {
 
   if (isPredictionServiceError(error)) {
     return errorResponse(error.message, error.statusCode, error.details);
+  }
+
+  if (isUserNotFoundError(error)) {
+    return errorResponse(error.message, error.statusCode);
   }
 
   if (error instanceof ZodError) {

@@ -30,17 +30,35 @@ export function UsernameGate({ children }: UsernameGateProps) {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const stored = getStoredUserSession();
-    if (stored?.username) {
-      setSession({
-        username: stored.username,
-        email: stored.email,
-        avatarUrl: stored.avatarUrl ?? null,
-      });
-      setUsernameInput(stored.username);
-      setEmailInput(stored.email);
+    async function hydrateSession() {
+      const stored = getStoredUserSession();
+      if (stored?.username) {
+        try {
+          const response = await fetch(
+            `/api/users/${encodeURIComponent(stored.username)}`,
+          );
+
+          if (response.ok) {
+            const user = (await response.json()) as UserSession;
+            setSession({
+              username: user.username,
+              email: user.email,
+              avatarUrl: user.avatarUrl ?? null,
+            });
+            setUsernameInput(user.username);
+            setEmailInput(user.email);
+          } else {
+            clearStoredUserSession();
+          }
+        } catch {
+          clearStoredUserSession();
+        }
+      }
+
+      setHydrated(true);
     }
-    setHydrated(true);
+
+    void hydrateSession();
   }, []);
 
   function handleSignOut() {
