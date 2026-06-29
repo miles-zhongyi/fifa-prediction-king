@@ -53,7 +53,11 @@ export function SiteNav() {
     <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-lg">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
         <div className="flex min-w-0 items-center gap-3 sm:gap-5">
-          <Link href="/" className="flex shrink-0 items-center gap-3">
+          <a
+            href="https://dodonadata.ai/"
+            className="flex shrink-0 items-center gap-3"
+            aria-label="DodonaData.ai"
+          >
             <Image
               src="/dodonaLogo.png"
               alt="DodonaData.ai"
@@ -62,7 +66,7 @@ export function SiteNav() {
               className="h-7 w-auto object-contain sm:h-8"
               priority
             />
-          </Link>
+          </a>
 
           <div className="hidden min-w-0 border-l border-[var(--border)] pl-4 sm:block">
             <p className="truncate text-sm font-semibold">FIFA World Cup 2026</p>
