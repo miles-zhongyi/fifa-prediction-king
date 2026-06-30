@@ -122,20 +122,39 @@ function RightHalf({ sf, qf, r16, r32 }: { sf: BracketMatch; qf: BracketMatch[];
 }
 
 function RoundLabels() {
-  const labels = ["Round of 32", "Round of 16", "QF", "SF", "Final", "SF", "QF", "Round of 16", "Round of 32"];
-  const flex = [1, 1, 1, 1, 0, 1, 1, 1, 1];
-  const widths = [undefined, undefined, undefined, undefined, 200, undefined, undefined, undefined, undefined];
+  const cls = "flex-1 text-center text-[10px] font-semibold uppercase tracking-wider text-[var(--muted)]";
+  const gap = <div style={{ width: 18 }} />;
   return (
-    <div className="mb-2 flex text-center">
-      {labels.map((l, i) => (
-        <div
-          key={i}
-          className={`text-[10px] font-semibold uppercase tracking-wider ${i === 4 ? "text-[var(--accent)]" : "text-[var(--muted)]"}`}
-          style={widths[i] ? { width: widths[i], flexShrink: 0 } : { flex: flex[i] }}
-        >
-          {l}
-        </div>
-      ))}
+    <div className="mb-2 flex">
+      {/* Left half — mirrors LeftHalf structure */}
+      <div style={{ flex: 1 }} className="flex">
+        <div className={cls}>Round of 32</div>
+        {gap}
+        <div className={cls}>Round of 16</div>
+        {gap}
+        <div className={cls}>QF</div>
+        {gap}
+        <div className={cls}>SF</div>
+        {gap}
+      </div>
+      {/* Final center */}
+      <div
+        style={{ width: 200, flexShrink: 0 }}
+        className="text-center text-[10px] font-semibold uppercase tracking-wider text-[var(--accent)]"
+      >
+        Final
+      </div>
+      {/* Right half — mirrors RightHalf structure */}
+      <div style={{ flex: 1 }} className="flex">
+        {gap}
+        <div className={cls}>SF</div>
+        {gap}
+        <div className={cls}>QF</div>
+        {gap}
+        <div className={cls}>Round of 16</div>
+        {gap}
+        <div className={cls}>Round of 32</div>
+      </div>
     </div>
   );
 }
