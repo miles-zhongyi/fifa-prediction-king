@@ -3,6 +3,7 @@ import { mapApiTeamName } from "@/lib/football-data/team-map";
 export type ExternalMatchResult = {
   externalId: number;
   utcDate: Date;
+  stage: string;
   homeTeam: string;
   awayTeam: string;
   homeScore: number | null;
@@ -20,9 +21,11 @@ type FootballDataMatch = {
   id: number;
   utcDate: string;
   status: string;
+  stage: string;
   homeTeam: FootballDataTeam;
   awayTeam: FootballDataTeam;
   score?: {
+    winner?: string | null;
     fullTime?: {
       home: number | null;
       away: number | null;
@@ -55,19 +58,18 @@ function mapStatus(status: string): ExternalMatchResult["status"] {
 function resolveWinner(
   homeTeam: string,
   awayTeam: string,
+  scoreWinner: string | null | undefined,
   homeScore: number | null,
   awayScore: number | null,
 ): string | null {
-  if (homeScore === null || awayScore === null) {
-    return null;
-  }
+  // Use API's winner field when set
+  if (scoreWinner === "HOME_TEAM") return homeTeam;
+  if (scoreWinner === "AWAY_TEAM") return awayTeam;
 
-  if (homeScore > awayScore) {
-    return homeTeam;
-  }
-
-  if (awayScore > homeScore) {
-    return awayTeam;
+  // For PK matches the API may leave winner=null but fullTime holds the tiebreak score
+  if (homeScore !== null && awayScore !== null) {
+    if (homeScore > awayScore) return homeTeam;
+    if (awayScore > homeScore) return awayTeam;
   }
 
   return null;
@@ -112,18 +114,20 @@ export async function fetchWorldCupMatches(
     const awayTeam = mapApiTeamName(match.awayTeam.name ?? "");
     const homeScore = match.score?.fullTime?.home ?? null;
     const awayScore = match.score?.fullTime?.away ?? null;
+    const scoreWinner = match.score?.winner;
     const status = mapStatus(match.status);
 
     return {
       externalId: match.id,
       utcDate: new Date(match.utcDate),
+      stage: match.stage ?? "",
       homeTeam,
       awayTeam,
       homeScore: status === "FINISHED" ? homeScore : null,
       awayScore: status === "FINISHED" ? awayScore : null,
       winner:
         status === "FINISHED"
-          ? resolveWinner(homeTeam, awayTeam, homeScore, awayScore)
+          ? resolveWinner(homeTeam, awayTeam, scoreWinner, homeScore, awayScore)
           : null,
       status,
     };

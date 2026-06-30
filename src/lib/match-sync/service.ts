@@ -5,6 +5,16 @@ import { schedulePersistGameData } from "@/lib/persistence/schedule-persist";
 import { prisma } from "@/lib/prisma";
 import { deriveGroupResult } from "@/lib/standings/group-standings";
 
+// Maps football-data.org stage names → our KnockoutRoundResult round keys.
+// Winner of a LAST_32 match advances to TOP16 (Round of 16), etc.
+const EXTERNAL_STAGE_TO_ROUND: Record<string, string> = {
+  LAST_32: "TOP16",
+  LAST_16: "TOP8",
+  QUARTER_FINALS: "TOP4",
+  SEMI_FINALS: "TOP2",
+  FINAL: "WINNER",
+};
+
 const SYNC_INTERVAL_MS = 5 * 60 * 1000;
 let lastSyncAt = 0;
 let syncInFlight: Promise<{ updated: number }> | null = null;
@@ -111,6 +121,35 @@ async function applyExternalResults(): Promise<{ updated: number }> {
       },
       update: derived,
     });
+  }
+
+  // Sync knockout round results from finished knockout matches
+  const winnersByRound = new Map<string, Set<string>>();
+  for (const m of externalMatches) {
+    if (m.status !== "FINISHED" || !m.winner) continue;
+    const round = EXTERNAL_STAGE_TO_ROUND[m.stage];
+    if (!round) continue;
+    if (!winnersByRound.has(round)) winnersByRound.set(round, new Set());
+    winnersByRound.get(round)!.add(m.winner);
+  }
+
+  for (const [round, winners] of winnersByRound) {
+    const existing = await prisma.knockoutRoundResult.findUnique({ where: { round } });
+    const existingTeams: string[] = existing
+      ? (JSON.parse(existing.teams) as string[])
+      : [];
+
+    const merged = [...new Set([...existingTeams, ...winners])].sort();
+    const existingSorted = [...existingTeams].sort();
+
+    if (JSON.stringify(merged) !== JSON.stringify(existingSorted)) {
+      await prisma.knockoutRoundResult.upsert({
+        where: { round },
+        create: { round, teams: JSON.stringify(merged), finalized: false },
+        update: { teams: JSON.stringify(merged) },
+      });
+      updated += 1;
+    }
   }
 
   if (updated > 0) {
