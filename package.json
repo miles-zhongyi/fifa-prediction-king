@@ -16,6 +16,7 @@
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
     "db:backup": "tsx scripts/backup-game-data.ts",
+    "db:import-ai-bots": "tsx scripts/import-ai-bot-picks.ts",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"
   },
