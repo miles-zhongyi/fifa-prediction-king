@@ -1,37 +1,57 @@
 /**
- * Import AI bot bracket picks from the spreadsheet CSV into SQLite.
+ * Import AI bot bracket picks from spreadsheet CSVs into SQLite.
  *
  * Usage:
- *   npx tsx scripts/import-ai-bot-picks.ts [path/to/picks.csv]
+ *   npx tsx scripts/import-ai-bot-picks.ts
  */
 
-import { readFile } from "fs/promises";
+import { copyFile, mkdir, readFile } from "fs/promises";
 import path from "path";
 import { PrismaClient } from "@prisma/client";
+import { buildAvatarPublicPath, getAvatarUploadDir } from "../src/lib/paths";
 import { GROUP_KEYS, getTeamsInGroup, type GroupKey } from "../src/lib/groups";
 import { mapApiTeamName } from "../src/lib/football-data/team-map";
 
 const prisma = new PrismaClient();
 
-const DEFAULT_CSV = path.join(process.cwd(), "data", "ai-bot-picks.csv");
+type BotConfig = {
+  csvPath: string;
+  csvColumn: string;
+  username: string;
+  email: string;
+  iconFile: string;
+};
 
-const BOTS = [
+const BOTS: BotConfig[] = [
   {
+    csvPath: "data/ai-bot-picks.csv",
     csvColumn: "Gemini 3.1 Pro",
     username: "Gemini31Pro",
     email: "gemini31pro@dodonadata.ai",
+    iconFile: "data/bot-icons/GeminiIcon.png",
   },
   {
+    csvPath: "data/ai-bot-picks.csv",
     csvColumn: "Claude Sonnet 5",
     username: "ClaudeSonnet5",
     email: "claudesonnet5@dodonadata.ai",
+    iconFile: "data/bot-icons/ClaudeIcon.png",
   },
   {
+    csvPath: "data/ai-bot-picks.csv",
     csvColumn: "GPT 5.5",
     username: "GPT55",
     email: "gpt55@dodonadata.ai",
+    iconFile: "data/bot-icons/GPTIcon.png",
   },
-] as const;
+  {
+    csvPath: "data/fifabot-picks.csv",
+    csvColumn: "FIFAbot",
+    username: "FIFAbot",
+    email: "fifabot@dodonadata.ai",
+    iconFile: "data/bot-icons/FIFABotIcon.png",
+  },
+];
 
 const SECTION_GROUP = "group #1&2";
 const SECTION_THIRD = "#3 advanced";
@@ -214,17 +234,28 @@ function groupAdvancePicksFromList(teams: string[]): Array<{ groupKey: GroupKey;
   return picks;
 }
 
-async function upsertBotUser(username: string, email: string) {
-  const existing = await prisma.user.findUnique({ where: { username } });
-  if (existing) {
-    return existing;
-  }
+async function installBotAvatar(userId: string, iconFile: string): Promise<string> {
+  const uploadsDir = getAvatarUploadDir();
+  await mkdir(uploadsDir, { recursive: true });
 
-  return prisma.user.create({
-    data: {
+  const filename = `${userId}-bot.png`;
+  await copyFile(path.join(process.cwd(), iconFile), path.join(uploadsDir, filename));
+
+  return buildAvatarPublicPath(filename);
+}
+
+async function upsertBotUser(username: string, email: string, avatarUrl: string) {
+  return prisma.user.upsert({
+    where: { username },
+    create: {
       username,
       email,
-      avatarUrl: `/api/avatar/${username}`,
+      avatarUrl,
+      hidden: false,
+    },
+    update: {
+      email,
+      avatarUrl,
       hidden: false,
     },
   });
@@ -268,21 +299,38 @@ async function replaceBotPicks(userId: string, picks: ParsedBotPicks) {
   });
 }
 
-async function main() {
-  const csvPath = process.argv[2] ?? DEFAULT_CSV;
+async function importBot(bot: BotConfig) {
+  const csvPath = path.join(process.cwd(), bot.csvPath);
   const text = await readFile(csvPath, "utf-8");
   const rows = parseCsvRows(text);
   const header = rows[0];
+  const columnIndex = findColumnIndex(header, bot.csvColumn);
+  const picks = parseBotColumn(rows, columnIndex);
 
+  let user = await prisma.user.findUnique({ where: { username: bot.username } });
+  if (!user) {
+    user = await prisma.user.create({
+      data: {
+        username: bot.username,
+        email: bot.email,
+        avatarUrl: `/api/avatar/${bot.username}`,
+        hidden: false,
+      },
+    });
+  }
+
+  const avatarUrl = await installBotAvatar(user.id, bot.iconFile);
+  user = await upsertBotUser(bot.username, bot.email, avatarUrl);
+  await replaceBotPicks(user.id, picks);
+
+  console.log(
+    `Imported ${bot.username}: 24 group + 8 third + 31 knockout picks (champion: ${picks.winner})`,
+  );
+}
+
+async function main() {
   for (const bot of BOTS) {
-    const columnIndex = findColumnIndex(header, bot.csvColumn);
-    const picks = parseBotColumn(rows, columnIndex);
-    const user = await upsertBotUser(bot.username, bot.email);
-    await replaceBotPicks(user.id, picks);
-
-    console.log(
-      `Imported ${bot.username}: 24 group + 8 third + 31 knockout picks (champion: ${picks.winner})`,
-    );
+    await importBot(bot);
   }
 }
 
