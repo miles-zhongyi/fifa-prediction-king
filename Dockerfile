@@ -35,6 +35,7 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/src ./src
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
 COPY --from=builder /app/data/bot-icons ./data/bot-icons
 COPY --from=builder /app/data/ai-bot-picks.csv ./data/ai-bot-picks.csv
 COPY --from=builder /app/data/fifabot-picks.csv ./data/fifabot-picks.csv
